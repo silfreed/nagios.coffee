@@ -109,8 +109,8 @@ module.exports = (robot) ->
     robot.logger.info "#{msg.envelope.user.name} forced recheck of #{host}:#{service}"
     call = "cmd.cgi"
     d = new Date()
-    start_time = "#{d.getUTCFullYear()}-#{d.getUTCMonth()}-#{d.getUTCDate()}+#{d.getUTCHours()}%3A#{d.getUTCMinutes()}%3A#{d.getUTCSeconds()}"
-    data = "cmd_typ=7&cmd_mod=2&host=#{host}&service=#{service}&force_check=on&start_time=\"#{start_time}\""
+    start_time = "#{d.getMonth()+1}-#{d.getDate()}-#{d.getFullYear()} #{d.getHours()}:#{d.getMinutes()}:#{d.getSeconds()}"
+    data = "cmd_typ=7&cmd_mod=2&host=#{host}&service=#{service}&force_check=on&start_time=#{start_time}"
     nagios_post msg, call, data, (res) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Scheduled to recheck #{host}:#{service} at #{start_time}"
