@@ -23,6 +23,17 @@ nagios_url = process.env.HUBOT_NAGIOS_URL
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
 module.exports = (robot) ->
+  # d=days h=hours m=min default m
+  parsetime = (time) =>
+    lastchar = time[-1..]
+    if lastchar == 'd'
+      return time[..-2] * 60 * 24
+    else if lastchar == 'h'
+      return time[..-2] * 60
+    else if lastchar == 'm'
+      return time[..-2]
+    else
+      return time
 
   robot.router.post '/hubot/nagios/:room', (req, res) ->
     room = req.params.room
@@ -61,10 +72,11 @@ module.exports = (robot) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Your acknowledgement was received by nagios"
 
-  robot.respond /nagios (down|downtime) ([^:\s]+) (\d+) (.*)/i, (msg) ->
+  robot.respond /nagios (down|downtime) ([^:\s]+) (\d[dhm]+) (.*)/i, (msg) ->
     host = msg.match[2]
-    minutes = msg.match[3] || 30
+    duration = msg.match[3] || 30
     message = msg.match[4] || ""
+    minutes = parsetime(duration) || 30
     downstart = new Date()
     downstop  = new Date(downstart.getTime() + (1000 * 60 * minutes))
     downstart_str = "#{downstart.getMonth()+1}-#{downstart.getDate()}-#{downstart.getFullYear()} #{downstart.getHours()}:#{downstart.getMinutes()}:#{downstart.getSeconds()}"
@@ -77,17 +89,6 @@ module.exports = (robot) ->
         msg.send "Downtime for #{host} for #{minutes}m"
 
   robot.respond /nagios (down|downtime) (\S+):(\S+) (\d+[dhm]?) (.*)/i, (msg) ->
-    # d=days h=hours m=min default m
-    parsetime = (time) =>
-      lastchar = time[-1..]
-      if lastchar == 'd'
-        return time[..-2] * 60 * 24
-      else if lastchar == 'h'
-        return time[..-2] * 60
-      else if lastchar == 'm'
-        return time[..-2]
-      else
-        return time
     host = msg.match[2]
     service = msg.match[3]
     duration = msg.match[4] || 30
@@ -149,3 +150,4 @@ nagios_post = (msg, call, data, cb) ->
     .header('User-Agent', "Hubot/#{@version}")
     .post(data) (err, res, body) ->
       cb body
+
