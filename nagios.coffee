@@ -23,10 +23,12 @@ nagios_url = process.env.HUBOT_NAGIOS_URL
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
 module.exports = (robot) ->
-  # d=days h=hours m=min default m
+  # w=weeks d=days h=hours m=min default m
   parsetime = (time) =>
     lastchar = time[-1..]
-    if lastchar == 'd'
+    if lastchar == 'w'
+      return time[..-2] * 60 * 24 * 7
+    else if lastchar == 'd'
       return time[..-2] * 60 * 24
     else if lastchar == 'h'
       return time[..-2] * 60
@@ -72,7 +74,7 @@ module.exports = (robot) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Your acknowledgement was received by nagios"
 
-  robot.respond /nagios (down|downtime) ([^:\s]+) (\d[dhm]+) (.*)/i, (msg) ->
+  robot.respond /nagios (down|downtime) ([^:\s]+) (\d[wdhm]+) (.*)/i, (msg) ->
     host = msg.match[2]
     duration = msg.match[3] || 30
     message = msg.match[4] || ""
@@ -88,7 +90,7 @@ module.exports = (robot) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Downtime for #{host} for #{minutes}m"
 
-  robot.respond /nagios (down|downtime) (\S+):(\S+) (\d+[dhm]?) (.*)/i, (msg) ->
+  robot.respond /nagios (down|downtime) (\S+):(\S+) (\d+[wdhm]?) (.*)/i, (msg) ->
     host = msg.match[2]
     service = msg.match[3]
     duration = msg.match[4] || 30
