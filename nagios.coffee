@@ -63,9 +63,9 @@ module.exports = (robot) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Your acknowledgement was received by nagios"
 
-  robot.respond /nagios ack(nowledge)? (\S+):(\S+) (.*)/i, (msg) ->
+  robot.respond /nagios ack(nowledge)? (\S+):(.+) (.*)/i, (msg) ->
     host = msg.match[2]
-    service = msg.match[3]
+    service = msg.match[3].replace / +/g, "+" # Spaces in service names must be replaced with a '+' to post the command
     message = msg.match[4] || ""
     robot.logger.info "#{msg.envelope.user.name} acked #{host}:#{service}"
     call = "cmd.cgi"
