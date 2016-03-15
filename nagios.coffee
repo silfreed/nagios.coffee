@@ -49,7 +49,7 @@ module.exports = (robot) ->
       robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host} is #{output}"
     else
       service = req.body.description
-      if notes_url == ''
+      if notes_url == '' or notificationtype == 'RECOVERY'
         robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host}:#{service} is #{state}: #{output}"
       else if notes_url != ''
         robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host}:#{service} is #{state}: #{output} notes_url: #{notes_url}"
