@@ -88,7 +88,7 @@ module.exports = (robot) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Downtime for #{host} for #{minutes}m"
 
-  robot.respond /nagios (down|downtime) (\S+):(\S+) (\d+[dhm]?) (.*)/i, (msg) ->
+  robot.respond /nagios (down|downtime) (\S+):(.*) (\d+[dhm]?) (.*)/i, (msg) ->
     host = msg.match[2]
     service = msg.match[3]
     duration = msg.match[4] || 30
