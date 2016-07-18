@@ -28,7 +28,7 @@ module.exports = (robot) ->
   parsetime = (time) =>
     lastchar = time[-1..]
     if lastchar == 'd'
-      # Calculate and substract an offset from the normalization hour set above. Allow setting downtime
+      # Calculate and subtract an offset from the normalization hour set above. Allow setting downtime
       # at 2am that will expire at 12pm instead of 2am the following interval.
       if normalize_parsetime_days_to_hour >= 0
         d = new Date
