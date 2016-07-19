@@ -21,6 +21,7 @@
 
 nagios_url = process.env.HUBOT_NAGIOS_URL
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+normalize_parsetime_days_to_hour = 12
 
 module.exports = (robot) ->
   # w=weeks d=days h=hours m=min default m
@@ -29,7 +30,14 @@ module.exports = (robot) ->
     if lastchar == 'w'
       return time[..-2] * 60 * 24 * 7
     else if lastchar == 'd'
-      return time[..-2] * 60 * 24
+      # Calculate and subtract an offset from the normalization hour set above. Allow setting downtime
+      # at 2am that will expire at 12pm instead of 2am the following interval.
+      if normalize_parsetime_days_to_hour >= 0
+        d = new Date
+        offset = -(d.getHours() - normalize_parsetime_days_to_hour) - (d.getMinutes() / 60)
+      else
+        offset = 0
+      return (time[..-2] * 60 * 24) + (offset * 60)
     else if lastchar == 'h'
       return time[..-2] * 60
     else if lastchar == 'm'
