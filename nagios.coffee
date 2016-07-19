@@ -43,12 +43,16 @@ module.exports = (robot) ->
     output = req.body.output
     state = req.body.state
     notificationtype = req.body.notificationtype
+    notes_url = req.body.notes_url
 
     if req.body.type == 'host'
       robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host} is #{output}"
     else
       service = req.body.description
-      robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host}:#{service} is #{state}: #{output}"
+      if notes_url == ''
+        robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host}:#{service} is #{state}: #{output}"
+      else if notes_url != ''
+        robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host}:#{service} is #{state}: #{output} notes_url: #{notes_url}"
 
     res.writeHead 204, { 'Content-Length': 0 }
     res.end()
