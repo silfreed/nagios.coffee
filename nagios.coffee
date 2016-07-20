@@ -23,11 +23,18 @@ nagios_url = process.env.HUBOT_NAGIOS_URL
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
 module.exports = (robot) ->
-  # d=days h=hours m=min default m
-  parsetime = (time) =>
+  # w=weeks d=days h=hours m=min default m
+  parsetime = (time, norm = -1) =>
     lastchar = time[-1..]
-    if lastchar == 'd'
-      return time[..-2] * 60 * 24
+    if lastchar == 'w'
+      return time[..-2] * 60 * 24 * 7
+    else if lastchar == 'd'
+      if norm >= 0
+        d = new Date
+        offset = -(d.getHours() - norm) - (d.getMinutes() / 60)
+      else
+        offset = 0
+      return (time[..-2] * 60 * 24) + (offset * 60)
     else if lastchar == 'h'
       return time[..-2] * 60
     else if lastchar == 'm'
@@ -41,12 +48,16 @@ module.exports = (robot) ->
     output = req.body.output
     state = req.body.state
     notificationtype = req.body.notificationtype
+    notes_url = req.body.notes_url
 
     if req.body.type == 'host'
       robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host} is #{output}"
     else
       service = req.body.description
-      robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host}:#{service} is #{state}: #{output}"
+      if notes_url == '' or notificationtype == 'RECOVERY'
+        robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host}:#{service} is #{state}: #{output}"
+      else if notes_url != ''
+        robot.messageRoom "#{room}", "nagios #{notificationtype}: #{host}:#{service} is #{state}: #{output} notes_url: #{notes_url}"
 
     res.writeHead 204, { 'Content-Length': 0 }
     res.end()
@@ -61,9 +72,9 @@ module.exports = (robot) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Your acknowledgement was received by nagios"
 
-  robot.respond /nagios ack(nowledge)? (\S+):(\S+) (.*)/i, (msg) ->
+  robot.respond /nagios ack(nowledge)? (\S+):(.+) (.*)/i, (msg) ->
     host = msg.match[2]
-    service = msg.match[3]
+    service = msg.match[3].replace '/ +/g', "+" # Spaces in service names must be replaced with a '+' to post the command
     message = msg.match[4] || ""
     robot.logger.info "#{msg.envelope.user.name} acked #{host}:#{service}"
     call = "cmd.cgi"
@@ -72,11 +83,11 @@ module.exports = (robot) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Your acknowledgement was received by nagios"
 
-  robot.respond /nagios (down|downtime) ([^:\s]+) (\d[dhm]+) (.*)/i, (msg) ->
+  robot.respond /nagios (down|downtime) ([^:\s]+) (\d[wdhm]+) (.*)/i, (msg) ->
     host = msg.match[2]
     duration = msg.match[3] || 30
     message = msg.match[4] || ""
-    minutes = parsetime(duration) || 30
+    minutes = parsetime(duration,12) || 30
     downstart = new Date()
     downstop  = new Date(downstart.getTime() + (1000 * 60 * minutes))
     downstart_str = "#{downstart.getMonth()+1}-#{downstart.getDate()}-#{downstart.getFullYear()} #{downstart.getHours()}:#{downstart.getMinutes()}:#{downstart.getSeconds()}"
@@ -88,13 +99,13 @@ module.exports = (robot) ->
       if res.match(/Your command request was successfully submitted to Nagios for processing/)
         msg.send "Downtime for #{host} for #{minutes}m"
 
-  robot.respond /nagios (down|downtime) (\S+):(\S+) (\d+[dhm]?) (.*)/i, (msg) ->
+  robot.respond /nagios (down|downtime) (\S+):(.*) (\d+[wdhm]?) (.*)/i, (msg) ->
     host = msg.match[2]
     service = msg.match[3]
     duration = msg.match[4] || 30
     message = msg.match[5] || ""
     downstart = new Date()
-    minutes = parsetime(duration)
+    minutes = parsetime(duration,12)
     downstop  = new Date(downstart.getTime() + (1000 * 60 * minutes))
     downstart_str = "#{downstart.getMonth()+1}-#{downstart.getDate()}-#{downstart.getFullYear()} #{downstart.getHours()}:#{downstart.getMinutes()}:#{downstart.getSeconds()}"
     downstop_str = "#{downstop.getMonth()+1}-#{downstop.getDate()}-#{downstop.getFullYear()} #{downstop.getHours()}:#{downstop.getMinutes()}:#{downstop.getSeconds()}"
