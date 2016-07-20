@@ -21,7 +21,6 @@
 
 nagios_url = process.env.HUBOT_NAGIOS_URL
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-normalize_parsetime_days_to_hour = 12
 
 module.exports = (robot) ->
   # w=weeks d=days h=hours m=min default m
