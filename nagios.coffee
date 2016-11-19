@@ -77,7 +77,7 @@ module.exports = (robot) ->
 
   robot.respond /nagios ack(nowledge)? (\S+):(.+) (.*)/i, (msg) ->
     host = msg.match[2]
-    service = msg.match[3].replace / +/g, "+" # Spaces in service names must be replaced with a '+' to post the command
+    service = msg.match[3].replace /[ ]+/g, "+" # Spaces in service names must be replaced with a '+' to post the command
     message = msg.match[4] || ""
     robot.logger.info "#{msg.envelope.user.name} acked #{host}:#{service}"
     call = "cmd.cgi"
